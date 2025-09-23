@@ -23,9 +23,9 @@ RUN npm init -y &&  \
     && addgroup -g 1001 pptruser && adduser -D -u 1001 -G pptruser pptruser \
     && mkdir -p /home/pptruser/Downloads \
     && chown -R pptruser:pptruser /home/pptruser \
-    && chown -R pptruser:pptruser /node_modules \
-    && chown -R pptruser:pptruser /package.json \
-    && chown -R pptruser:pptruser /package-lock.json
+    && chown -R pptruser:pptruser /home/node/node_modules \
+    && chown -R pptruser:pptruser /home/node/package.json \
+    && chown -R pptruser:pptruser /home/node/package-lock.json
 
 # Ensure n8n config dir exists with correct permissions
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
