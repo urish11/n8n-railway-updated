@@ -11,6 +11,7 @@ RUN apk add --no-cache \
     mesa-gbm libdrm \
     cairo pango gtk+3.0 \
     alsa-lib fontconfig ttf-freefont cups-libs \
+    libc6-compat libudev-zero \
     su-exec
 
 # Puppeteer cache dir
