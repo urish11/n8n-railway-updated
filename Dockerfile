@@ -13,8 +13,8 @@ RUN apk add --no-cache \
 RUN if [ -x /usr/bin/chromium ]; then ln -sf /usr/bin/chromium /usr/bin/chromium-browser; fi
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --headless=new"
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium
+# ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --headless=new"
 
 RUN mkdir -p /opt/n8n-custom-nodes && \
     cd /opt/n8n-custom-nodes && \
