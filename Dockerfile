@@ -27,10 +27,10 @@ RUN mkdir -p /opt/n8n-custom-nodes && \
     chown -R node:node /opt/n8n-custom-nodes
 
 # Copy our custom entrypoint
-COPY docker-custom-entrypoint.sh /docker-custom-entrypoint.sh
-RUN chmod +x /docker-custom-entrypoint.sh && \
-    chown node:node /docker-custom-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh && \
+    chown node:node /docker-entrypoint.sh
 
 USER node
 
-ENTRYPOINT ["/docker-custom-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
