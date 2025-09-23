@@ -22,7 +22,7 @@ fi
 
 print_banner
 
-# Pass Puppeteer args to the node if it reads from env; also safe if unused.
+# Export sane defaults even if not set
 export PUPPETEER_ARGS="${PUPPETEER_ARGS:-"--no-sandbox --disable-dev-shm-usage --headless=new"}"
 
 # Hand off to the original n8n entrypoint

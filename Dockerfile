@@ -2,48 +2,41 @@ FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
-# Install Chromium + runtime deps (Debian/Ubuntu)
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+# --- Install Chromium and required deps on Alpine ---
+RUN apk add --no-cache \
     chromium \
-    xdg-utils \
+    nss \
+    glib \
+    freetype \
+    harfbuzz \
     ca-certificates \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    libasound2 \
-    libatk1.0-0 \
-    libc6 \
-    libcairo2 \
-    libcups2 \
-    libdbus-1-3 \
-    libexpat1 \
-    libfontconfig1 \
-    libgbm1 \
-    libglib2.0-0 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libstdc++6 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
- && rm -rf /var/lib/apt/lists/*
+    ttf-freefont \
+    ttf-liberation \
+    font-noto-emoji \
+    udev \
+    dumb-init \
+    # common headless/runtime libs
+    libx11 \
+    libxcomposite \
+    libxdamage \
+    libxext \
+    libxi \
+    libxrandr \
+    libxfixes \
+    libxcb \
+    libgcc \
+    libstdc++ \
+    alsa-lib \
+    gtk+3.0 \
+    pango
 
-# Some environments expect chromium-browser – provide alias if needed
+# Some Alpine variants expose chromium at /usr/bin/chromium; add a browser alias
 RUN if [ -x /usr/bin/chromium ]; then ln -sf /usr/bin/chromium /usr/bin/chromium-browser; fi
 
 # Tell Puppeteer to use the system Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-# Helpful defaults for containers like Railway
+# Helpful default flags for containers like Railway
 ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --headless=new"
 
 # Install the custom node once into a stable path
@@ -52,7 +45,7 @@ RUN mkdir -p /opt/n8n-custom-nodes && \
     npm install --omit=dev n8n-nodes-puppeteer && \
     chown -R node:node /opt/n8n-custom-nodes
 
-# Ensure n8n data dir exists and is owned by node (prevents EACCES when a fresh volume is mounted)
+# Ensure n8n data dir exists and is owned by node (prevents EACCES on fresh volume)
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node
 
 # Copy custom entrypoint
