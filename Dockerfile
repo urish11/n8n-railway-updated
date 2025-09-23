@@ -21,12 +21,8 @@ RUN mkdir -p "$PUPPETEER_CACHE_DIR" && chown -R node:node /home/node
 # Ensure n8n config dir exists with correct permissions
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
 
-USER node
-# Prefetch Chrome and create a stable symlink
-RUN npx puppeteer browsers install chrome && \
-    CHROME_BIN="$(find /home/node/.cache/puppeteer -type f -name 'chrome' -executable | sort | tail -n1)" && \
-    echo "Cached Chrome at: ${CHROME_BIN}" && \
-    ln -sf "${CHROME_BIN}" /home/node/.cache/puppeteer/chrome-bin
+# Don't install Chrome at build time - do it at runtime
+# This ensures it works in Railway's deployment environment
 
 # Stable path + safe launch args
 ENV PUPPETEER_EXECUTABLE_PATH=/home/node/.cache/puppeteer/chrome-bin \
