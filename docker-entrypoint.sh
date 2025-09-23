@@ -10,6 +10,13 @@ if [ -d /home/node/.n8n ]; then
   chmod 700 /home/node/.n8n || true
 fi
 
+# Ensure Chrome can run as node user
+chown -R node:node /usr/bin/chromium-browser || true
+chmod +x /usr/bin/chromium-browser
+
+# Add node user to pptruser group for Chrome access
+adduser node pptruser || true
+
 # System Chrome is already installed, no need to install Puppeteer Chrome
 
 # Drop to node user and exec
