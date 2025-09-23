@@ -1,41 +1,29 @@
 #!/bin/sh
+set -e
 
 print_banner() {
-    echo "----------------------------------------"
-    echo "n8n Puppeteer Node - Environment Details"
-    echo "----------------------------------------"
-    echo "Node.js version: $(node -v)"
-    echo "n8n version: $(n8n --version)"
-
-    # Get Chromium version specifically from the path we're using for Puppeteer
-    CHROME_VERSION=$("$PUPPETEER_EXECUTABLE_PATH" --version 2>/dev/null || echo "Chromium not found")
-    echo "Chromium version: $CHROME_VERSION"
-
-    # Get Puppeteer version if installed
-    PUPPETEER_PATH="/opt/n8n-custom-nodes/node_modules/n8n-nodes-puppeteer"
-    if [ -f "$PUPPETEER_PATH/package.json" ]; then
-        PUPPETEER_VERSION=$(node -p "require('$PUPPETEER_PATH/package.json').version")
-        echo "n8n-nodes-puppeteer version: $PUPPETEER_VERSION"
-
-        # Try to resolve puppeteer package from the n8n-nodes-puppeteer directory
-        CORE_PUPPETEER_VERSION=$(cd "$PUPPETEER_PATH" && node -e "try { const version = require('puppeteer/package.json').version; console.log(version); } catch(e) { console.log('not found'); }")
-        echo "Puppeteer core version: $CORE_PUPPETEER_VERSION"
-    else
-        echo "n8n-nodes-puppeteer: not installed"
-    fi
-
-    echo "Puppeteer executable path: $PUPPETEER_EXECUTABLE_PATH"
-    echo "----------------------------------------"
+  echo "----------------------------------------"
+  echo "n8n Puppeteer Node - Environment Details"
+  echo "----------------------------------------"
+  echo "Node.js: $(node -v)"
+  echo "n8n: $(n8n --version || true)"
+  CHROME_VERSION=$("$PUPPETEER_EXECUTABLE_PATH" --version 2>/dev/null || echo "Chromium not found")
+  echo "Chromium: $CHROME_VERSION"
+  echo "Puppeteer exec path: $PUPPETEER_EXECUTABLE_PATH"
+  echo "Puppeteer extra args: $PUPPETEER_ARGS"
+  echo "Custom nodes dir: $N8N_CUSTOM_EXTENSIONS"
+  echo "----------------------------------------"
 }
 
-# Add custom nodes to the NODE_PATH
-if [ -n "$N8N_CUSTOM_EXTENSIONS" ]; then
-    export N8N_CUSTOM_EXTENSIONS="/opt/n8n-custom-nodes:${N8N_CUSTOM_EXTENSIONS}"
-else
-    export N8N_CUSTOM_EXTENSIONS="/opt/n8n-custom-nodes"
+# Last-mile fix in case the mounted Railway volume comes in with root perms
+if [ -d "/home/node/.n8n" ]; then
+  chown -R node:node /home/node/.n8n 2>/dev/null || true
 fi
 
 print_banner
 
-# Execute the original n8n entrypoint script
+# Pass Puppeteer args to the node if it reads from env; also safe if unused.
+export PUPPETEER_ARGS="${PUPPETEER_ARGS:-"--no-sandbox --disable-dev-shm-usage --headless=new"}"
+
+# Hand off to the original n8n entrypoint
 exec /docker-entrypoint.sh "$@"
