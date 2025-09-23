@@ -24,7 +24,7 @@ RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
 USER node
 # Prefetch Chrome and create a stable symlink
 RUN npx puppeteer browsers install chrome && \
-    CHROME_BIN="$(find /home/node/.cache/puppeteer -type f -path '*/chrome-linux64/chrome' | sort | tail -n1)" && \
+    CHROME_BIN="$(find /home/node/.cache/puppeteer -type f -name 'chrome' -executable | sort | tail -n1)" && \
     echo "Cached Chrome at: ${CHROME_BIN}" && \
     ln -sf "${CHROME_BIN}" /home/node/.cache/puppeteer/chrome-bin
 
