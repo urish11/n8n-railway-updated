@@ -1,25 +1,41 @@
-#!/usr/bin/env sh
-set -e
+#!/bin/sh
 
-# Ensure ownership for node user on its home and n8n config
-mkdir -p /home/node/.n8n
-chown -R node:node /home/node
+print_banner() {
+    echo "----------------------------------------"
+    echo "n8n Puppeteer Node - Environment Details"
+    echo "----------------------------------------"
+    echo "Node.js version: $(node -v)"
+    echo "n8n version: $(n8n --version)"
 
-# If a volume mounts /home/node/.n8n with wrong perms, fix it
-if [ -d /home/node/.n8n ]; then
-  chmod 700 /home/node/.n8n || true
+    # Get Chromium version specifically from the path we're using for Puppeteer
+    CHROME_VERSION=$("$PUPPETEER_EXECUTABLE_PATH" --version 2>/dev/null || echo "Chromium not found")
+    echo "Chromium version: $CHROME_VERSION"
+
+    # Get Puppeteer version if installed
+    PUPPETEER_PATH="/opt/n8n-custom-nodes/node_modules/n8n-nodes-puppeteer"
+    if [ -f "$PUPPETEER_PATH/package.json" ]; then
+        PUPPETEER_VERSION=$(node -p "require('$PUPPETEER_PATH/package.json').version")
+        echo "n8n-nodes-puppeteer version: $PUPPETEER_VERSION"
+
+        # Try to resolve puppeteer package from the n8n-nodes-puppeteer directory
+        CORE_PUPPETEER_VERSION=$(cd "$PUPPETEER_PATH" && node -e "try { const version = require('puppeteer/package.json').version; console.log(version); } catch(e) { console.log('not found'); }")
+        echo "Puppeteer core version: $CORE_PUPPETEER_VERSION"
+    else
+        echo "n8n-nodes-puppeteer: not installed"
+    fi
+
+    echo "Puppeteer executable path: $PUPPETEER_EXECUTABLE_PATH"
+    echo "----------------------------------------"
+}
+
+# Add custom nodes to the NODE_PATH
+if [ -n "$N8N_CUSTOM_EXTENSIONS" ]; then
+    export N8N_CUSTOM_EXTENSIONS="/opt/n8n-custom-nodes:${N8N_CUSTOM_EXTENSIONS}"
+else
+    export N8N_CUSTOM_EXTENSIONS="/opt/n8n-custom-nodes"
 fi
 
-# Ensure Chrome can run as node user
-chown -R node:node /usr/bin/chromium-browser || true
-chmod +x /usr/bin/chromium-browser
+print_banner
 
-# Add node user to pptruser group for Chrome access
-adduser node pptruser || true
-
-# System Chrome is already installed, no need to install Puppeteer Chrome
-
-# Drop to node user and exec
-exec su-exec node:node "$@"
-
-
+# Execute the original n8n entrypoint script
+exec /docker-entrypoint.sh "$@"
