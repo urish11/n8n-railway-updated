@@ -1,31 +1,36 @@
 FROM n8nio/n8n:latest
 
-# Alpine base → use apk
+# Install latest chrome dev package and fonts to support major charsets
+# Note: this installs the necessary libs to make the bundled version of Chrome for Testing that Puppeteer
+# installs, work.
 USER root
-RUN apk add --no-cache \
-    nss nspr ca-certificates \
-    glib dbus-libs \
-    libx11 libxcb libxext libxfixes libxrender libxi \
-    libxcomposite libxdamage libxrandr \
-    libxkbcommon libxshmfence \
-    mesa-gbm libdrm \
-    cairo pango gtk+3.0 \
-    alsa-lib fontconfig ttf-freefont cups-libs \
-    libc6-compat libudev-zero \
-    su-exec
+RUN apt-get update \
+    && apt-get install -y wget gnupg \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+      --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get install -y su-exec
 
-# Puppeteer cache dir
-ENV PUPPETEER_CACHE_DIR=/home/node/.cache/puppeteer
-RUN mkdir -p "$PUPPETEER_CACHE_DIR" && chown -R node:node /home/node
+# Install puppeteer so it's available in the container.
+RUN npm init -y &&  \
+    npm i puppeteer \
+    # Add user so we don't need --no-sandbox.
+    # same layer as npm install to keep re-chowned files from using up several hundred MBs more space
+    && groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
+    && mkdir -p /home/pptruser/Downloads \
+    && chown -R pptruser:pptruser /home/pptruser \
+    && chown -R pptruser:pptruser /node_modules \
+    && chown -R pptruser:pptruser /package.json \
+    && chown -R pptruser:pptruser /package-lock.json
 
 # Ensure n8n config dir exists with correct permissions
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
 
-# Don't install Chrome at build time - do it at runtime
-# This ensures it works in Railway's deployment environment
-
-# Stable path + safe launch args
-ENV PUPPETEER_EXECUTABLE_PATH=/home/node/.cache/puppeteer/chrome-bin \
+# Use system Chrome (google-chrome-stable)
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --disable-gpu --single-process"
 
