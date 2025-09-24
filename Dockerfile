@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xdg-utils \
     lsb-release \
     fonts-noto-color-emoji \
-    ffmpeg \
     git \
     openssh-client \
     graphicsmagick \
