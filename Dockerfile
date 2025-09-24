@@ -1,35 +1,60 @@
-FROM docker.n8n.io/n8nio/n8n:latest
+FROM node:20
+#need platform flag before n20 if building on arm
 
-USER root
+# Install dependencies for Puppeteer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libpango-1.0-0 \
+    libgbm1 \
+    libnss3 \
+    libxshmfence1 \
+    ca-certificates \
+    fonts-liberation \
+    libappindicator3-1 \
+    libgtk-3-0 \
+    wget \
+    xdg-utils \
+    lsb-release \
+    fonts-noto-color-emoji \
+    ffmpeg \
+    git \
+    openssh-client \
+    graphicsmagick \
+    tini \
+    tzdata \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
 
-# (unchanged) packages
-RUN apk add --no-cache \
-    chromium nss glib freetype harfbuzz ca-certificates \
-    ttf-freefont ttf-liberation font-noto-emoji udev dumb-init \
-    libx11 libxcomposite libxdamage libxext libxi libxrandr libxfixes \
-    libxcb libgcc libstdc++ alsa-lib gtk+3.0 pango \
-    su-exec  # <— add this
+# Install Chromium browser
+RUN apt-get update && apt-get install -y chromium && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN if [ -x /usr/bin/chromium ]; then ln -sf /usr/bin/chromium /usr/bin/chromium-browser; fi
+# Install n8n and Puppeteer
+RUN npm install -g n8n puppeteer
+# Add npm global bin to PATH to ensure n8n executable is found
+ENV PATH="/usr/local/lib/node_modules/n8n/bin:$PATH"
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium
-# ENV PUPPETEER_ARGS="--no-sandbox --disable-dev-shm-usage --headless=new"
+# Set environment variables
+ENV N8N_LOG_LEVEL=info
+ENV NODE_FUNCTION_ALLOW_EXTERNAL=ajv,ajv-formats,puppeteer,ffmpeg,git,graphicsmagick,openssh-client
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-RUN mkdir -p /opt/n8n-custom-nodes && \
-    cd /opt/n8n-custom-nodes && \
-    npm install --omit=dev n8n-nodes-puppeteer && \
-    chown -R node:node /opt/n8n-custom-nodes
+# Expose the n8n port
+EXPOSE 5678
 
-# create the folder; real fix happens at runtime after mount
-RUN mkdir -p /home/node/.n8n
+# Create proper entrypoint scripts with shebang
+RUN printf '#!/bin/sh\nexec n8n worker\n' > /worker && \
+    printf '#!/bin/sh\nexec n8n webhook\n' > /webhook && \
+    chmod +x /worker /webhook
 
-COPY docker-custom-entrypoint.sh /docker-custom-entrypoint.sh
-RUN chmod +x /docker-custom-entrypoint.sh
-
-# IMPORTANT: stay root so entrypoint can chown the mounted volume
-# USER node   <-- remove this line if you had it
-
-ENV N8N_CUSTOM_EXTENSIONS="/opt/n8n-custom-nodes"
-
-ENTRYPOINT ["/docker-custom-entrypoint.sh"]
+# Start n8n (default command)
+CMD ["n8n", "start"]
