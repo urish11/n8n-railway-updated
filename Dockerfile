@@ -39,11 +39,16 @@ RUN apt-get update && apt-get install -y chromium && \
 # Install n8n and Puppeteer
 RUN npm install -g n8n puppeteer
 # Add npm global bin to PATH to ensure n8n executable is found
+RUN mkdir -p /home/node/.n8n/custom && \
+    cd /home/node/.n8n/custom && \
+    npm init -y && \
+    npm install n8n-nodes-puppeteer --omit=dev
+    
 ENV PATH="/usr/local/lib/node_modules/n8n/bin:$PATH"
 
 # Set environment variables
 ENV N8N_LOG_LEVEL=info
-ENV NODE_FUNCTION_ALLOW_EXTERNAL=ajv,ajv-formats,puppeteer,graphicsmagick,openssh-client
+ENV NODE_FUNCTION_ALLOW_EXTERNAL=ajv,ajv-formats,puppeteer
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Expose the n8n port
