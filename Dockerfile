@@ -44,7 +44,7 @@ ENV PATH="/usr/local/lib/node_modules/n8n/bin:$PATH"
 
 # Set environment variables
 ENV N8N_LOG_LEVEL=info
-ENV NODE_FUNCTION_ALLOW_EXTERNAL=ajv,ajv-formats,puppeteer,ffmpeg,git,graphicsmagick,openssh-client
+ENV NODE_FUNCTION_ALLOW_EXTERNAL=ajv,ajv-formats,puppeteer,git,graphicsmagick,openssh-client
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Expose the n8n port
