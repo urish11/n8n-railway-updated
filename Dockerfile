@@ -39,10 +39,10 @@ RUN apt-get update && apt-get install -y chromium && \
 # Install n8n and Puppeteer
 RUN npm install -g n8n puppeteer
 # Add npm global bin to PATH to ensure n8n executable is found
-RUN mkdir -p /home/node/.n8n/custom && \
-    cd /home/node/.n8n/custom && \
-    npm init -y && \
-    npm install n8n-nodes-puppeteer --omit=dev
+RUN mkdir -p /opt/n8n-custom-nodes && \
+    cd /opt/n8n-custom-nodes && \
+    npm install --omit=dev n8n-nodes-puppeteer && \
+    chown -R node:node /opt/n8n-custom-nodes
     
 ENV PATH="/usr/local/lib/node_modules/n8n/bin:$PATH"
 
