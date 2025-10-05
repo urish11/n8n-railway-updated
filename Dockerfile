@@ -2,6 +2,13 @@ FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
+# Copy your hook into /data/hooks
+COPY n8n-hooks /data/hooks
+
+# Enable garbage collection exposure and register hook file
+ENV NODE_OPTIONS="--expose-gc"
+ENV EXTERNAL_HOOK_FILES="/data/hooks/gc-after-exec.js"
+
 # (unchanged) packages
 RUN apk add --no-cache \
     chromium nss glib freetype harfbuzz ca-certificates \
