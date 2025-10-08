@@ -39,4 +39,4 @@ RUN mkdir -p /home/node/.n8n
 
 ENV N8N_CUSTOM_EXTENSIONS="/opt/n8n-custom-nodes"
 
-ENTRYPOINT ["/docker-custom-entrypoint.sh"]
+##ENTRYPOINT ["/docker-custom-entrypoint.sh"]
